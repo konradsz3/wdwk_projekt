@@ -24,12 +24,11 @@ def eea(a, b, deg):
 
     return r1, u1, v1
 
-def gao(c, n, k, GF):
-    alpha = GF.primitive_element
-    P = GF([alpha ** i for i in range(n)])
+def gao(c, n, k, GF, points):
     f = GF(c)
-    g0 = galois.Poly.Roots(GF.elements[1:])
-    g1 = galois.lagrange_poly(P, f)
+    g0 = galois.Poly.Roots(points) 
+    g1 = galois.lagrange_poly(points, f)
+
     deg = (n+k) // 2
 
     g, u, v = eea(g0, g1, deg)
@@ -49,7 +48,8 @@ def gao(c, n, k, GF):
             return None
         
         if len(msg.coeffs) < k:
-            return np.concatenate([[0] * k - len(msg.coeffs), msg.coeffs])
+            padding = GF.Zeros(k - len(msg.coeffs))
+            return np.concatenate([padding, msg.coeffs])
         else:
             return msg.coeffs[-k:]
         
@@ -58,9 +58,9 @@ def gao(c, n, k, GF):
         return None
 
 
-GF = galois.GF(5)
-ciphertext = GF([0,3,2,0])
-msg = gao(ciphertext, 4, 2, GF)
-print(msg)
-#msg = [2,4] czyli 2x+4
-#wychodzi -m(x) z przykładu bo interpolacja lagrangea jako g1(x) wyznaczyła -g1(x) z przykładu
+# GF = galois.GF(5)
+# ciphertext = GF([0,3,2,0])
+# msg = gao(ciphertext, 4, 2, GF)
+# print(msg)
+# msg = [2,4] czyli 2x+4
+# wychodzi -m(x) z przykładu bo interpolacja lagrangea jako g1(x) wyznaczyła -g1(x) z przykładu
