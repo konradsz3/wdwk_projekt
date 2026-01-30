@@ -34,7 +34,6 @@ def gao(c, n, k, GF, points):
     g, u, v = eea(g0, g1, deg)
     try:
         msg, r = divmod(g, v)
-        print(msg)
 
         if r !=0:
             print("Error: reszta z dzielenia jest niezerowa")
