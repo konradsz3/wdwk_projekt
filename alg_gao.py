@@ -32,9 +32,6 @@ def gao(c, n, k, GF, points):
     deg = (n+k) // 2
 
     g, u, v = eea(g0, g1, deg)
-    print(g0)
-    print(g1)
-    print(g)
     try:
         msg, r = divmod(g, v)
         print(msg)
@@ -56,11 +53,3 @@ def gao(c, n, k, GF, points):
     except ZeroDivisionError:
         print("Error: Dzielenie przez zero.")
         return None
-
-
-# GF = galois.GF(5)
-# ciphertext = GF([0,3,2,0])
-# msg = gao(ciphertext, 4, 2, GF)
-# print(msg)
-# msg = [2,4] czyli 2x+4
-# wychodzi -m(x) z przykładu bo interpolacja lagrangea jako g1(x) wyznaczyła -g1(x) z przykładu
