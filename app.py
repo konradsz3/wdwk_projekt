@@ -59,7 +59,7 @@ class McElieceGUI(tk.Tk):
         message_frame = tk.LabelFrame(self, text="Szyfrowanie i deszyfrowanie wiadomości")
         message_frame.pack(fill=tk.X, padx=10, pady=5)
 
-        tk.Label(message_frame, text="Wiadomość (długość k):").pack(side=tk.LEFT, padx=2)
+        tk.Label(message_frame, text="Wiadomość:").pack(side=tk.LEFT, padx=2)
         self.message_entry = tk.Entry(message_frame, width=40)
         self.message_entry.pack(side=tk.LEFT, padx=2)
 
