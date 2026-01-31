@@ -16,7 +16,6 @@ def random_distinct_elements(field, count, non_zero=False):
     return list(candidates[idx])
 
 
-
 def GRS_matrix(n, k, x, z, field):
     """
     Generuje macierz generującą kod GRS o parametrach (n, k) nad danym polem skończonym.

@@ -3,6 +3,7 @@ import galois
 from alg_gao import gao
 from helpers import grs_matrix as grs
 
+
 class McElieceRS:
     def __init__(self, n, k, q):
         if not (k < n):
