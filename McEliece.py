@@ -6,10 +6,13 @@ class McElieceRS:
     def __init__(self, n, k, q):
         if not (k < n):
             raise ValueError("k musi być mniejsze niż n!")
+        if not galois.is_prime_power(q):
+            raise ValueError("q musi być potęgą liczby pierwszej!")
             
         self.n = n
         self.k = k
         self.t = (n - k) // 2
+        self.q = q
         self.GF = galois.GF(q)
         
         print(f"Parametry systemu: n={n}, k={k}, t={self.t} (GF({q}))")
@@ -69,14 +72,14 @@ class McElieceRS:
         return m
 
 #Przykład z dokumentacji:
-system = McElieceRS(4, 2, 5)
-private_key, public_key = system.generate_keys()
-G_pub, t_pub = public_key
-S_pv, G_pv, P_pv = private_key
-print(f'G = {G_pv}')
+# system = McElieceRS(4, 2, 5)
+# private_key, public_key = system.generate_keys()
+# G_pub, t_pub = public_key
+# S_pv, G_pv, P_pv = private_key
+# print(f'G = {G_pv}')
 
-szyfrogram = system.encrypt([1, 2], public_key)
-print(f'c = {szyfrogram}')
+# szyfrogram = system.encrypt([1, 2], public_key)
+# print(f'c = {szyfrogram}')
 
-wiadomosc = system.decrypt(szyfrogram, private_key)
-print(f'm = {wiadomosc}')
+# wiadomosc = system.decrypt(szyfrogram, private_key)
+# print(f'm = {wiadomosc}')

@@ -92,12 +92,12 @@ def sidelnikov_shestakov_attack(B, s, field):
 
     return x, z, H 
 
-GF11 = galois.GF(11)
-B_example = GF11([[3, 1, 0, 5, 7], [7, 3, 1, 0, 4]])
-s_param = 1
+# GF11 = galois.GF(11)
+# B_example = GF11([[3, 1, 0, 5, 7], [7, 3, 1, 0, 4]])
+# s_param = 1
     
-recovered_x, recovered_z, recovered_H = sidelnikov_shestakov_attack(B_example, s_param, GF11)
+# recovered_x, recovered_z, recovered_H = sidelnikov_shestakov_attack(B_example, s_param, GF11)
     
-print("Odzyskane punkty x:", recovered_x)
-print("Odzyskane wagi z:  ", recovered_z)
-print("Odzyskana macierz H:\n", recovered_H)
+# print("Odzyskane punkty x:", recovered_x)
+# print("Odzyskane wagi z:  ", recovered_z)
+# print("Odzyskana macierz H:\n", recovered_H)
