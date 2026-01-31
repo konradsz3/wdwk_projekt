@@ -131,33 +131,33 @@ def recover_message_final(ciphertext, x, z, H, k, GF):
 
 # --- PRZYKŁAD DZIAŁANIA ---
 
-# 1. Inicjalizacja systemu 
-n, k, q = 10, 4, 13 # k=4 oznacza s=3 w ataku
-system = McElieceRS(n, k, q)
-GF = system.GF
-private_key, public_key = system.generate_keys()
-G_pub, t = public_key
+# # 1. Inicjalizacja systemu 
+# n, k, q = 10, 4, 13 # k=4 oznacza s=3 w ataku
+# system = McElieceRS(n, k, q)
+# GF = system.GF
+# private_key, public_key = system.generate_keys()
+# G_pub, t = public_key
 
-# 2. Szyfrowanie wiadomości
-m_original = GF([4, 2, 2, 0])
-print(f"Oryginalna wiadomość: {m_original}")
+# # 2. Szyfrowanie wiadomości
+# m_original = GF([4, 2, 2, 0])
+# print(f"Oryginalna wiadomość: {m_original}")
 
-ciphertext = system.encrypt(m_original, public_key)
-print(f"Szyfrogram (z {t} błędami): {ciphertext}")
+# ciphertext = system.encrypt(m_original, public_key)
+# print(f"Szyfrogram (z {t} błędami): {ciphertext}")
 
-# 3. ATAK Sidelnikova-Shestakova
-# B to macierz publiczna, s = k-1
-print("\n--- Rozpoczynam atak... ---")
-x_recovered, z_recovered, H_recovered = sidelnikov_shestakov_attack(G_pub, k-1, GF)
-print("Atak zakończony. Odzyskano x, z oraz H.")
+# # 3. ATAK Sidelnikova-Shestakova
+# # B to macierz publiczna, s = k-1
+# print("\n--- Rozpoczynam atak... ---")
+# x_recovered, z_recovered, H_recovered = sidelnikov_shestakov_attack(G_pub, k-1, GF)
+# print("Atak zakończony. Odzyskano x, z oraz H.")
 
-# 4. ODZYSKIWANIE WIADOMOŚCI
-print("\n--- Dekodowanie wiadomości... ---")
-m_recovered = recover_message_final(ciphertext, x_recovered, z_recovered, H_recovered, k, GF)
+# # 4. ODZYSKIWANIE WIADOMOŚCI
+# print("\n--- Dekodowanie wiadomości... ---")
+# m_recovered = recover_message_final(ciphertext, x_recovered, z_recovered, H_recovered, k, GF)
 
-print(f"Odzyskana wiadomość: {m_recovered}")
+# print(f"Odzyskana wiadomość: {m_recovered}")
 
-if np.array_equal(m_original, m_recovered):
-    print("\nSUKCES! Wiadomość odzyskana bezbłędnie mimo braku klucza prywatnego.")
-else:
-    print("\nCoś poszło nie tak. Sprawdź kolejność potęg lub orientację macierzy H.")
+# if np.array_equal(m_original, m_recovered):
+#     print("\nSUKCES! Wiadomość odzyskana bezbłędnie mimo braku klucza prywatnego.")
+# else:
+#     print("\nCoś poszło nie tak. Sprawdź kolejność potęg lub orientację macierzy H.")
