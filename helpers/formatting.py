@@ -45,16 +45,10 @@ def format_keys(keys, q):
     lines.append("")
     lines.append(format_matrix(S, "Macierz S", field_str))
     lines.append("")
-    lines.append(format_matrix(G, "Macierz G (kod Goppa)", field_str))
+    lines.append(format_matrix(G, "Macierz G", field_str))
     lines.append("")
-
-    # --- Macierz permutacji ---
-    lines.append("Macierz permutacji P:")
-    perm = []
-    for row in P:
-        perm.append(next(i for i, x in enumerate(row) if int(x) == 1))
-    lines.append("(" + " ".join(map(str, perm)) + ")")
-
+    lines.append(format_matrix(P, "Macierz P (tożsamościowa)", field_str))
+    lines.append("")
     return "\n".join(lines)
 
 

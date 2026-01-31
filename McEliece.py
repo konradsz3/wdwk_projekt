@@ -15,7 +15,7 @@ class McElieceRS:
         self.q = q
         self.GF = galois.GF(q)
         
-        print(f"Parametry systemu: n={n}, k={k}, t={self.t} (GF({q}))")
+        #print(f"Parametry systemu: n={n}, k={k}, t={self.t} (GF({q}))")
 
     def generate_matrix_G_RS(self):
         alpha = self.GF.primitive_element

@@ -1,10 +1,12 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 import os
+import numpy as np
 from McEliece import McElieceRS
 from atak import sidelnikov_shestakov_attack
 import helpers.formatting as fmt
 from helpers.file_io import load_params_from_file, save_params_to_file
+from helpers.grs_matrix import GRS_matrix
 backend = None
 
 class McElieceGUI(tk.Tk):
@@ -35,14 +37,14 @@ class McElieceGUI(tk.Tk):
 
         tk.Button(
             params_frame,
-            text="Generuj parametry",
-            command=self.generate_parameters
+            text="Generuj klucze",
+            command=self.generate_keys
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
         tk.Button(
             params_frame,
-            text="Zapisz parametry do pliku",
-            command=self.save_parameters
+            text="Zapisz klucze do pliku",
+            command=self.save_keys
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
 
@@ -50,8 +52,8 @@ class McElieceGUI(tk.Tk):
 
         tk.Button(
             params_frame,
-            text="Wczytaj parametry z pliku",
-            command=self.load_parameters
+            text="Wczytaj klucze z pliku",
+            command=self.load_keys
         ).pack(side=tk.LEFT, padx=15, pady=5)
 
 
@@ -109,7 +111,7 @@ class McElieceGUI(tk.Tk):
         self.output_box.see(tk.END)
 
 
-    def generate_parameters(self):
+    def generate_keys(self):
         n = self.n_entry.get()
         k = self.k_entry.get()
         q = self.q_entry.get()
@@ -123,11 +125,11 @@ class McElieceGUI(tk.Tk):
         if n > q - 1:
             messagebox.showerror("Błąd", "n musi być mniejsze lub równe q - 1, aby wiadomość mogła zostać odszyfrowana.")
             return
-        self.log("[+] Generowanie parametrów kryptosystemu...")
+        self.log("[+] Generowanie kluczy kryptosystemu...")
         try:
             system = McElieceRS(n, k, q)
         except Exception as e:
-            messagebox.showerror("Błąd", f"Błąd podczas generowania parametrów:\n{e}")
+            messagebox.showerror("Błąd", f"Błąd podczas generowania kluczy:\n{e}")
             return
         keys = system.generate_keys()
         private_key, public_key = keys
@@ -141,14 +143,14 @@ class McElieceGUI(tk.Tk):
         self.log("[+] Wygenerowane parametry i klucze:")
         self.log(pretty_result)
 
-    def load_parameters(self):
+    def load_keys(self):
         path = filedialog.askopenfilename(
-            title="Wczytaj parametry",
-            filetypes=[("Pliki", "*.*")]
+            title="Wczytaj klucze",
+            filetypes=[("Pliki JSON", "*.json")]
         )
         if not path:
             return
-        self.log(f"[+] Wczytywanie parametrów z: {path}")
+        self.log(f"\n\n[+] Wczytywanie kluczy z: {path}")
         try:
             params = load_params_from_file(path)
         except Exception as e:
@@ -165,31 +167,29 @@ class McElieceGUI(tk.Tk):
         pretty_result = fmt.format_keys(keys, q)
         self.log(pretty_result)
 
-    def save_parameters(self):
+    def save_keys(self):
         if self.current_keys is None:
             messagebox.showerror(
                 "Błąd",
-                "Najpierw wygeneruj lub wczytaj parametry"
+                "Najpierw wygeneruj lub wczytaj klucze"
             )
             return
-
-        folder = filedialog.askdirectory(
-            title="Wybierz folder do zapisu parametrów"
+        path = filedialog.asksaveasfilename(
+            title="Zapisz klucze kryptosystemu",
+            defaultextension=".json",
+            filetypes=[("Pliki JSON", "*.json")]
         )
-        if not folder:
+        if not path:
             return
-
-        path = os.path.join(folder, "mceliece_keys.json")
-
         try:
             save_params_to_file(self.current_keys, self.current_system.q, path)
-            self.log(f"[+] Parametry zapisane do pliku: {path}")
+            self.log(f"[+] Klucze zapisane do pliku: {path}")
         except Exception as e:
             messagebox.showerror("Błąd zapisu", str(e))
 
     def encrypt_message(self):
         if self.current_keys is None:
-            messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj parametry")
+            messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj klucze")
             return
         public_key = self.current_keys["public_key"]
         system = self.current_system
@@ -204,14 +204,14 @@ class McElieceGUI(tk.Tk):
             c = system.encrypt(m, public_key)
             self.message_output.delete(0, tk.END)
             self.message_output.insert(0, fmt.format_gf_vector(c))
-            self.log(f"[+] Zaszyfrowano wiadomość {fmt.format_gf_vector(m)}: {fmt.format_gf_vector(c)}")
+            self.log(f"[+] Zaszyfrowano wiadomość ({fmt.format_gf_vector(m)}): ({fmt.format_gf_vector(c)})")
         except Exception as e:
             messagebox.showerror("Błąd", f"Szyfrowanie nie powiodło się:\n{e}")
 
 
     def decrypt_message(self):
         if self.current_keys is None or self.current_system is None:
-            messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj parametry")
+            messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj klucze")
             return
         if self.current_keys["private_key"][0] is None:
             messagebox.showerror("Błąd", "Brak klucza prywatnego do deszyfrowania")
@@ -229,7 +229,7 @@ class McElieceGUI(tk.Tk):
             plaintext = fmt.format_gf_vector(plaintext)
             self.message_output.delete(0, tk.END)
             self.message_output.insert(0, str(plaintext))
-            self.log(f"[+] Odszyfrowano wiadomość {fmt.format_gf_vector(ciphertext)}: {plaintext}")
+            self.log(f"[+] Odszyfrowano wiadomość ({fmt.format_gf_vector(ciphertext)}): ({plaintext})")
         except Exception as e:
             messagebox.showerror("Błąd", f"Nie udało się odszyfrować: {e}")
 
@@ -238,15 +238,15 @@ class McElieceGUI(tk.Tk):
         if self.current_keys is None:
             messagebox.showerror(
                 "Błąd",
-                "Najpierw wygeneruj lub wczytaj parametry"
+                "Najpierw wygeneruj lub wczytaj klucze"
             )
-            return
-        folder = filedialog.askdirectory(
-            title="Wybierz folder do zapisu klucza publicznego"
+        path = filedialog.asksaveasfilename(
+            title="Zapisz klucz publiczny kryptosystemu",
+            defaultextension=".json",
+            filetypes=[("Pliki JSON", "*.json")]
         )
-        if not folder:
+        if not path:
             return
-        path = os.path.join(folder, "mceliece_public_key.json")
         try:
             save_params_to_file(
                 {
@@ -267,7 +267,7 @@ class McElieceGUI(tk.Tk):
         )
         if not path:
             return
-        self.log(f"[+] Wczytywanie klucza publicznego z: {path}")
+        self.log(f"\n\n[+] Wczytywanie klucza publicznego z: {path}")
         params = load_params_from_file(path, private=False)
         keys = params["keys"]
         n = params["n"]
@@ -284,7 +284,7 @@ class McElieceGUI(tk.Tk):
         
     def run_attack(self):
         if self.current_keys is None or self.current_system is None:
-            messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj parametry")
+            messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj klucze")
             return
         self.log("[+] Uruchamianie ataku Sidelnikova–Shestakova...")
         public_key = self.current_keys["public_key"]
@@ -293,10 +293,25 @@ class McElieceGUI(tk.Tk):
         field = self.current_system.GF
         try:
             x, z, H = sidelnikov_shestakov_attack(B, s, field)
+            x = field(x)
+            z = field(z)
             self.log("[+] Wynik ataku:")
-            result = f"Punkty ewaluacji x: {fmt.format_gf_vector(x)}\nWspółczynniki z: {fmt.format_gf_vector(z)}"
+            result = f"Punkty ewaluacji x: ({fmt.format_gf_vector(x)})\nWspółczynniki z: ({fmt.format_gf_vector(z)})"
             self.log(str(result))
-            self.log(f"Macierz kontrolna H:\n{fmt.format_matrix(H, 'H', f'GF({self.current_system.q})')}")
+            self.log(f"\nMacierz kontrolna H:\n{fmt.format_matrix(H, 'H', f'GF({self.current_system.q})')}")
+            A = GRS_matrix(B.shape[1], B.shape[0], x, z, field)
+            self.log(f"\n[+] Macierz generująca odzyskana z ataku:\n{fmt.format_matrix(A, 'A', f'GF({self.current_system.q})')}")
+            P = self.current_system.GF(np.eye(B.shape[1], dtype=int))
+            self.log(f"\n[+] Macierz permutacji P (tożsamościowa):\n{fmt.format_matrix(P, 'P', f'GF({self.current_system.q})')}")
+            self.current_keys["private_key"] = (H, A, P)
+            product = H @ A @ P
+            self.log(f"\n[+] Sprawdzenie poprawności odzyskanego klucza prywatnego (H * A * P):\n{fmt.format_matrix(product, 'H * A * P', f'GF({self.current_system.q})')}")
+            if (product == B).all():
+                self.log("[+] Klucz prywatny poprawny i zgodny z kluczem publicznym.")
+                self.log("\n[+] Atak zakończony sukcesem. Klucz prywatny został odzyskany.")
+            else:
+                self.log("[!] Klucz prywatny nie jest zgodny z kluczem publicznym.")
+                self.log("\n[!] Atak zakończony niepowodzeniem.")
         except Exception as e:
             self.log("[!] Błąd podczas ataku")
             self.log(str(e))
