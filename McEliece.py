@@ -1,6 +1,7 @@
 import numpy as np
 import galois
 from alg_gao import gao
+from helpers import grs_matrix as grs
 
 class McElieceRS:
     def __init__(self, n, k, q):
@@ -27,7 +28,9 @@ class McElieceRS:
         return G
 
     def generate_keys(self):
-        G = self.generate_matrix_G_RS()
+        x = grs.random_distinct_elements(self.GF, self.n)
+        z = grs.random_distinct_elements(self.GF, self.n, non_zero=True)
+        G = grs.GRS_matrix(self.n, self.k, self.GF(x), self.GF(z), self.GF)
     
         while True:
             S = self.GF.Random((self.k, self.k))
@@ -54,21 +57,27 @@ class McElieceRS:
             return c
 
     def decrypt(self, ciphertext, private_key):
-        S, G, P = private_key
-        c_hat = ciphertext @ P.T
+        H, A, P = private_key
+        GF = self.GF
+        n = self.n
+        k = self.k
+        z = A[0]
+        x = A[1] / z
+        n = len(x)
+        c = GF(ciphertext)
+    
+        c_norm = c / GF(z)
+        m_hat_coeffs = gao(c_norm, n, k, GF, GF(x))
         
-        alpha = self.GF.primitive_element
-        points = alpha**np.arange(self.n) 
-        
-        m_hat_raw = gao(c_hat, self.n, self.k, self.GF, points)
-        
-        if m_hat_raw is None: return None
-        
-        m_hat = self.GF(m_hat_raw)
-
-        m = m_hat[::-1] @ np.linalg.inv(S)
-        
-        return m
+        if m_hat_coeffs is None:
+            raise ValueError("Algorytm Gao nie poradził sobie z błędami. Sprawdź parametry t i n-k.")
+        m_prime = GF(m_hat_coeffs[::-1])
+        try:
+            H_inv = np.linalg.inv(H)
+            m = m_prime @ H_inv
+            return m
+        except np.linalg.LinAlgError:
+            raise ValueError("Macierz H odzyskana w ataku jest osobliwa (nieodwracalna)!")
 
 #Przykład z dokumentacji:
 # system = McElieceRS(4, 2, 5)
