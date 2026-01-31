@@ -59,7 +59,7 @@ class McElieceGUI(tk.Tk):
         message_frame = tk.LabelFrame(self, text="Szyfrowanie i deszyfrowanie wiadomości")
         message_frame.pack(fill=tk.X, padx=10, pady=5)
 
-        tk.Label(message_frame, text="Wiadomość (długość k):").pack(side=tk.LEFT, padx=2)
+        tk.Label(message_frame, text="Wiadomość:").pack(side=tk.LEFT, padx=2)
         self.message_entry = tk.Entry(message_frame, width=40)
         self.message_entry.pack(side=tk.LEFT, padx=2)
 
@@ -119,6 +119,9 @@ class McElieceGUI(tk.Tk):
             q = int(q)
         except ValueError:
             messagebox.showerror("Błąd", "n, k, q muszą być liczbami całkowitymi")
+            return
+        if n > q - 1:
+            messagebox.showerror("Błąd", "n musi być mniejsze lub równe q - 1, aby wiadomość mogła zostać odszyfrowana.")
             return
         self.log("[+] Generowanie parametrów kryptosystemu...")
         try:
@@ -184,44 +187,49 @@ class McElieceGUI(tk.Tk):
         except Exception as e:
             messagebox.showerror("Błąd zapisu", str(e))
 
-
     def encrypt_message(self):
-        if self.current_keys is None or self.current_system is None:
+        if self.current_keys is None:
             messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj parametry")
             return
-        msg = self.message_entry.get()
-        system = self.current_system
         public_key = self.current_keys["public_key"]
-        private_key = self.current_keys["private_key"]
-        if not msg:
-            messagebox.showwarning("Uwaga", "Podaj wiadomość do zaszyfrowania")
+        system = self.current_system
+        k = system.k
+        GF = system.GF
+        try:
+            m = fmt.parse_gf_vector(self.message_entry.get(), GF, k)
+        except ValueError as e:
+            messagebox.showerror("Błąd danych", str(e))
             return
         try:
-            ciphertext = system.encrypt(msg, public_key)
+            c = system.encrypt(m, public_key)
             self.message_output.delete(0, tk.END)
-            self.message_output.insert(0, str(ciphertext))
-            self.log(f"[+] Wiadomość zaszyfrowana: {ciphertext}")
+            self.message_output.insert(0, fmt.format_gf_vector(c))
+            self.log(f"[+] Zaszyfrowano wiadomość {fmt.format_gf_vector(m)}: {fmt.format_gf_vector(c)}")
         except Exception as e:
-            messagebox.showerror("Błąd", f"Nie udało się zaszyfrować: {e}")
+            messagebox.showerror("Błąd", f"Szyfrowanie nie powiodło się:\n{e}")
+
 
     def decrypt_message(self):
         if self.current_keys is None or self.current_system is None:
             messagebox.showwarning("Uwaga", "Najpierw wygeneruj lub wczytaj parametry")
             return
-        if self.current_keys["private_key"] == (None, None, None):
+        if self.current_keys["private_key"][0] is None:
             messagebox.showerror("Błąd", "Brak klucza prywatnego do deszyfrowania")
             return
         system = self.current_system
         private_key = self.current_keys["private_key"]
         ciphertext = self.message_entry.get()
+
         if not ciphertext:
             messagebox.showwarning("Uwaga", "Podaj zaszyfrowaną wiadomość")
             return
         try:
+            ciphertext = fmt.parse_gf_vector(ciphertext, system.GF, system.n)
             plaintext = system.decrypt(ciphertext, private_key)
+            plaintext = fmt.format_gf_vector(plaintext)
             self.message_output.delete(0, tk.END)
             self.message_output.insert(0, str(plaintext))
-            self.log(f"[+] Wiadomość odszyfrowana: {plaintext}")
+            self.log(f"[+] Odszyfrowano wiadomość {fmt.format_gf_vector(ciphertext)}: {plaintext}")
         except Exception as e:
             messagebox.showerror("Błąd", f"Nie udało się odszyfrować: {e}")
 
@@ -286,9 +294,9 @@ class McElieceGUI(tk.Tk):
         try:
             x, z, H = sidelnikov_shestakov_attack(B, s, field)
             self.log("[+] Wynik ataku:")
-            result = f"Punkty ewaluacji x: {x}\nWspółczynniki z: {z}"
+            result = f"Punkty ewaluacji x: {fmt.format_gf_vector(x)}\nWspółczynniki z: {fmt.format_gf_vector(z)}"
             self.log(str(result))
-            self.log(f"Macierz kontrolna H:\n{fmt.format_matrix(H, 'H', field)}")
+            self.log(f"Macierz kontrolna H:\n{fmt.format_matrix(H, 'H', f'GF({self.current_system.q})')}")
         except Exception as e:
             self.log("[!] Błąd podczas ataku")
             self.log(str(e))

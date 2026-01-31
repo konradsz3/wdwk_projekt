@@ -58,3 +58,16 @@ def format_keys(keys, q):
     return "\n".join(lines)
 
 
+def parse_gf_vector(text, GF, k):
+    parts = text.strip().split()
+    if len(parts) != k:
+        raise ValueError(f"Wiadomość musi mieć dokładnie {k} elementów")
+    try:
+        values = [int(x) for x in parts]
+    except ValueError:
+        raise ValueError("Wiadomość musi zawierać tylko liczby całkowite")
+    return GF(values)
+
+
+def format_gf_vector(v):
+    return " ".join(str(int(x)) for x in v)
