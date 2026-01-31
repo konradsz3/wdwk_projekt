@@ -35,7 +35,6 @@ class McElieceRS:
                 break
         
         P = self.GF(np.eye(self.n, dtype=int))
-        P = P[np.random.permutation(self.n), :]
         
         G_hat = S @ G @ P
         
