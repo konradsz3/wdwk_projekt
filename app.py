@@ -204,6 +204,7 @@ class McElieceGUI(tk.Tk):
             c = system.encrypt(m, public_key)
             self.message_output.delete(0, tk.END)
             self.message_output.insert(0, fmt.format_gf_vector(c))
+            self.log(f"[+] Zaszyfrowano wiadomość {fmt.format_gf_vector(m)}: {fmt.format_gf_vector(c)}")
         except Exception as e:
             messagebox.showerror("Błąd", f"Szyfrowanie nie powiodło się:\n{e}")
 
@@ -228,7 +229,7 @@ class McElieceGUI(tk.Tk):
             plaintext = fmt.format_gf_vector(plaintext)
             self.message_output.delete(0, tk.END)
             self.message_output.insert(0, str(plaintext))
-            self.log(f"[+] Wiadomość odszyfrowana: {plaintext}")
+            self.log(f"[+] Odszyfrowano wiadomość {fmt.format_gf_vector(ciphertext)}: {plaintext}")
         except Exception as e:
             messagebox.showerror("Błąd", f"Nie udało się odszyfrować: {e}")
 
@@ -293,9 +294,9 @@ class McElieceGUI(tk.Tk):
         try:
             x, z, H = sidelnikov_shestakov_attack(B, s, field)
             self.log("[+] Wynik ataku:")
-            result = f"Punkty ewaluacji x: {x}\nWspółczynniki z: {z}"
+            result = f"Punkty ewaluacji x: {fmt.format_gf_vector(x)}\nWspółczynniki z: {fmt.format_gf_vector(z)}"
             self.log(str(result))
-            self.log(f"Macierz kontrolna H:\n{fmt.format_matrix(H, 'H', field)}")
+            self.log(f"Macierz kontrolna H:\n{fmt.format_matrix(H, 'H', f'GF({self.current_system.q})')}")
         except Exception as e:
             self.log("[!] Błąd podczas ataku")
             self.log(str(e))
